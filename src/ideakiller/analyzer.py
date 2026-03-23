@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
+import hashlib
 import json
+import os
 import re
+from functools import lru_cache
 from typing import Any
 
 from .llm import LLMClient
@@ -183,11 +187,27 @@ class IdeaAnalyzer:
         return await self._analyze_lens("customer_acquisition", idea, context)
 
     async def analyze_all(
-        self, idea: str, context: str = ""
+        self, idea: str, context: str = "", parallel: bool = True
     ) -> list[dict[str, Any]]:
-        """Run all 7 lenses sequentially and return results list."""
-        results = []
-        for lens_name in LENS_NAMES:
-            result = await self._analyze_lens(lens_name, idea, context)
-            results.append(result)
-        return results
+        """Run all 7 lenses and return results list.
+
+        When parallel=True (default), runs lenses concurrently with a semaphore
+        to limit concurrency. Falls back to sequential if parallel=False.
+        """
+        if not parallel:
+            results = []
+            for lens_name in LENS_NAMES:
+                result = await self._analyze_lens(lens_name, idea, context)
+                results.append(result)
+            return results
+
+        max_concurrent = int(os.environ.get("IDEAKILLER_MAX_CONCURRENT", "7"))
+        semaphore = asyncio.Semaphore(max_concurrent)
+
+        async def _bounded_analyze(lens_name: str) -> dict[str, Any]:
+            async with semaphore:
+                return await self._analyze_lens(lens_name, idea, context)
+
+        tasks = [_bounded_analyze(name) for name in LENS_NAMES]
+        results = await asyncio.gather(*tasks)
+        return list(results)
