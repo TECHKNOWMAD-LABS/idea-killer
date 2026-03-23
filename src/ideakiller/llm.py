@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import os
 
 import httpx
 
-OLLAMA_BASE_URL = "http://localhost:11434"
+logger = logging.getLogger(__name__)
+
+OLLAMA_BASE_URL = os.environ.get("IDEAKILLER_OLLAMA_URL", "http://localhost:11434")
 OLLAMA_DEFAULT_MODEL = "llama3.2"
 ANTHROPIC_DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+
+DEFAULT_TIMEOUT = float(os.environ.get("IDEAKILLER_LLM_TIMEOUT", "120"))
+MAX_RETRIES = int(os.environ.get("IDEAKILLER_LLM_RETRIES", "3"))
 
 
 class LLMClient:
@@ -18,9 +25,13 @@ class LLMClient:
         self,
         ollama_model: str = OLLAMA_DEFAULT_MODEL,
         anthropic_model: str = ANTHROPIC_DEFAULT_MODEL,
+        timeout: float = DEFAULT_TIMEOUT,
+        max_retries: int = MAX_RETRIES,
     ) -> None:
         self.ollama_model = ollama_model
         self.anthropic_model = anthropic_model
+        self.timeout = timeout
+        self.max_retries = max_retries
         self._ollama_available: bool | None = None
 
     async def _probe_ollama(self) -> bool:
@@ -33,7 +44,7 @@ class LLMClient:
             return False
 
     async def _ollama_complete(self, prompt: str) -> str:
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
             resp = await client.post(
                 f"{OLLAMA_BASE_URL}/api/generate",
                 json={
@@ -69,15 +80,35 @@ class LLMClient:
         )
         return message.content[0].text
 
+    async def _complete_with_retry(self, fn, prompt: str) -> str:
+        """Execute a completion function with exponential backoff retry."""
+        last_exc: Exception | None = None
+        for attempt in range(self.max_retries):
+            try:
+                return await fn(prompt)
+            except Exception as exc:
+                last_exc = exc
+                if attempt < self.max_retries - 1:
+                    delay = 2 ** attempt
+                    logger.warning(
+                        "LLM call failed (attempt %d/%d): %s. Retrying in %ds...",
+                        attempt + 1, self.max_retries, exc, delay,
+                    )
+                    await asyncio.sleep(delay)
+        raise last_exc  # type: ignore[misc]
+
     async def complete(self, prompt: str) -> str:
         """Run completion, trying Ollama first then falling back to Anthropic."""
+        if not prompt or not prompt.strip():
+            raise ValueError("Prompt cannot be empty")
+
         if self._ollama_available is None:
             self._ollama_available = await self._probe_ollama()
 
         if self._ollama_available:
             try:
-                return await self._ollama_complete(prompt)
+                return await self._complete_with_retry(self._ollama_complete, prompt)
             except Exception:
                 self._ollama_available = False
 
-        return await self._anthropic_complete(prompt)
+        return await self._complete_with_retry(self._anthropic_complete, prompt)
