@@ -164,26 +164,33 @@ class IdeaAnalyzer:
             }
 
     async def analyze_market_timing(self, idea: str, context: str = "") -> dict[str, Any]:
+        """Assess whether the market is ready — too early, too late, or just right."""
         return await self._analyze_lens("market_timing", idea, context)
 
     async def analyze_competition(self, idea: str, context: str = "") -> dict[str, Any]:
+        """Identify direct/indirect competitors and defensibility gaps."""
         return await self._analyze_lens("competition", idea, context)
 
     async def analyze_unit_economics(self, idea: str, context: str = "") -> dict[str, Any]:
+        """Break down CAC, LTV, gross margin, and payback period viability."""
         return await self._analyze_lens("unit_economics", idea, context)
 
     async def analyze_team_risk(self, idea: str, context: str = "") -> dict[str, Any]:
+        """Evaluate execution risk based on required skills and team composition."""
         return await self._analyze_lens("team_risk", idea, context)
 
     async def analyze_regulatory(self, idea: str, context: str = "") -> dict[str, Any]:
+        """Identify regulatory, legal, and compliance landmines."""
         return await self._analyze_lens("regulatory", idea, context)
 
     async def analyze_technology(self, idea: str, context: str = "") -> dict[str, Any]:
+        """Assess technical feasibility and engineering risk."""
         return await self._analyze_lens("technology", idea, context)
 
     async def analyze_customer_acquisition(
         self, idea: str, context: str = ""
     ) -> dict[str, Any]:
+        """Analyze go-to-market viability and customer acquisition channels."""
         return await self._analyze_lens("customer_acquisition", idea, context)
 
     async def analyze_all(
