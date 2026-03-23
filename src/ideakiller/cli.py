@@ -137,11 +137,13 @@ def analyze(idea: str, context: str, output: str, ollama_model: str) -> None:
 
 
 @main.command()
-def serve() -> None:
+@click.option("--host", default="127.0.0.1", help="Bind address (default: 127.0.0.1)")
+@click.option("--port", default=8000, type=int, help="Port to listen on")
+def serve(host: str, port: int) -> None:
     """Start the FastAPI server."""
     import uvicorn
 
-    uvicorn.run("ideakiller.api:app", host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run("ideakiller.api:app", host=host, port=port, reload=False)
 
 
 @main.command()
