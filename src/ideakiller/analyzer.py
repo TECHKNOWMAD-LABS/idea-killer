@@ -114,6 +114,17 @@ def _validate_lens_result(data: dict[str, Any], expected_lens: str) -> dict[str,
     return result
 
 
+def _sanitize_input(text: str, max_length: int = 5000) -> str:
+    """Sanitize and truncate user input."""
+    if not isinstance(text, str):
+        raise TypeError(f"Expected str, got {type(text).__name__}")
+    # Strip control characters except newlines and tabs
+    cleaned = "".join(
+        c for c in text if c in ("\n", "\t") or (ord(c) >= 32 and ord(c) != 127)
+    )
+    return cleaned.strip()[:max_length]
+
+
 class IdeaAnalyzer:
     """Runs 7 adversarial lenses against a startup idea."""
 
@@ -123,6 +134,16 @@ class IdeaAnalyzer:
     async def _analyze_lens(
         self, lens_name: str, idea: str, context: str = ""
     ) -> dict[str, Any]:
+        idea = _sanitize_input(idea, max_length=2000)
+        context = _sanitize_input(context, max_length=1000) if context else ""
+        if not idea:
+            return {
+                "lens_name": lens_name,
+                "severity": 5,
+                "finding": "No idea provided for analysis.",
+                "evidence": "Empty input received.",
+                "survival_probability": 0.0,
+            }
         description = LENS_DEFINITIONS[lens_name]
         prompt = _build_prompt(lens_name, description, idea, context)
         try:
