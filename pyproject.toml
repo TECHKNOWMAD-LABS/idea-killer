@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Destroy your startup idea before the market does."
 readme = "README.md"
 license = { text = "MIT" }
+authors = [{ name = "TechKnowMad Labs", email = "admin@techknowmad.ai" }]
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.110.0",
