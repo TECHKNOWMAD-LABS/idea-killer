@@ -73,8 +73,7 @@ class LLMClient:
             model=self.anthropic_model,
             max_tokens=1024,
             system=(
-                "You are a JSON-only analysis API. "
-                "Always respond with valid JSON and nothing else."
+                "You are a JSON-only analysis API. Always respond with valid JSON and nothing else."
             ),
             messages=[{"role": "user", "content": prompt}],
         )
@@ -89,10 +88,13 @@ class LLMClient:
             except Exception as exc:
                 last_exc = exc
                 if attempt < self.max_retries - 1:
-                    delay = 2 ** attempt
+                    delay = 2**attempt
                     logger.warning(
                         "LLM call failed (attempt %d/%d): %s. Retrying in %ds...",
-                        attempt + 1, self.max_retries, exc, delay,
+                        attempt + 1,
+                        self.max_retries,
+                        exc,
+                        delay,
                     )
                     await asyncio.sleep(delay)
         raise last_exc  # type: ignore[misc]

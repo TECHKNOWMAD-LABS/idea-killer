@@ -14,7 +14,7 @@ import sys
 
 sys.path.insert(0, "src")
 
-from ideakiller.scorer import IdeaScorer, WEIGHTS
+from ideakiller.scorer import WEIGHTS, IdeaScorer
 
 
 def compare_ideas() -> None:

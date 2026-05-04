@@ -50,13 +50,15 @@ def demo_extraction() -> None:
         try:
             data = _extract_json(text)
             result = _validate_lens_result(data, data.get("lens_name", "unknown"))
-            print(f"Extracted: lens={result['lens_name']}, severity={result['severity']}, "
-                  f"survival={result['survival_probability']:.0%}")
+            print(
+                f"Extracted: lens={result['lens_name']}, severity={result['severity']}, "
+                f"survival={result['survival_probability']:.0%}"
+            )
         except ValueError as e:
             print(f"Failed: {e}")
 
     # Demonstrate failure case
-    print(f"\n--- Invalid input ---")
+    print("\n--- Invalid input ---")
     try:
         _extract_json("no json here at all!")
     except ValueError as e:
