@@ -7,20 +7,20 @@ import json
 import time
 from unittest.mock import AsyncMock
 
-import pytest
-
 from ideakiller.analyzer import LENS_NAMES, IdeaAnalyzer
 from ideakiller.llm import LLMClient
 
 
 def _mock_response(lens_name: str) -> str:
-    return json.dumps({
-        "lens_name": lens_name,
-        "severity": 5,
-        "finding": f"Finding for {lens_name}",
-        "evidence": f"Evidence for {lens_name}",
-        "survival_probability": 0.5,
-    })
+    return json.dumps(
+        {
+            "lens_name": lens_name,
+            "severity": 5,
+            "finding": f"Finding for {lens_name}",
+            "evidence": f"Evidence for {lens_name}",
+            "survival_probability": 0.5,
+        }
+    )
 
 
 class TestParallelAnalysis:
@@ -86,8 +86,7 @@ class TestParallelAnalysis:
 
         # Parallel should be at least 2x faster with 7 concurrent tasks
         assert par_time < seq_time * 0.8, (
-            f"Parallel ({par_time:.3f}s) not significantly faster than "
-            f"sequential ({seq_time:.3f}s)"
+            f"Parallel ({par_time:.3f}s) not significantly faster than sequential ({seq_time:.3f}s)"
         )
 
     async def test_parallel_handles_partial_failures(self):

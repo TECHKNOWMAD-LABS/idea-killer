@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from ideakiller.app import _format_lens, _run_analysis, build_ui
 from ideakiller.analyzer import LENS_NAMES
+from ideakiller.app import _format_lens, _run_analysis, build_ui
 
 
 def _make_result(lens_name: str, severity: int = 5, prob: float = 0.5) -> dict:
@@ -64,8 +64,7 @@ class TestRunAnalysis:
     @pytest.mark.asyncio
     async def test_successful_analysis(self):
         fake_results = _make_all_results()
-        with patch("ideakiller.app._get_llm"), \
-             patch("ideakiller.app.IdeaAnalyzer") as mock_cls:
+        with patch("ideakiller.app._get_llm"), patch("ideakiller.app.IdeaAnalyzer") as mock_cls:
             mock_instance = AsyncMock()
             mock_instance.analyze_all.return_value = fake_results
             mock_cls.return_value = mock_instance
@@ -79,15 +78,12 @@ class TestRunAnalysis:
 
     @pytest.mark.asyncio
     async def test_analysis_error_handled(self):
-        with patch("ideakiller.app._get_llm"), \
-             patch("ideakiller.app.IdeaAnalyzer") as mock_cls:
+        with patch("ideakiller.app._get_llm"), patch("ideakiller.app.IdeaAnalyzer") as mock_cls:
             mock_instance = AsyncMock()
             mock_instance.analyze_all.side_effect = RuntimeError("LLM failed")
             mock_cls.return_value = mock_instance
 
-            summary, details = await _run_analysis(
-                "Some idea that causes errors in analysis", ""
-            )
+            summary, details = await _run_analysis("Some idea that causes errors in analysis", "")
 
         assert "Error" in summary
 

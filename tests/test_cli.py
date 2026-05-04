@@ -7,9 +7,8 @@ from unittest.mock import AsyncMock, patch
 
 from click.testing import CliRunner
 
-from ideakiller.cli import main, _severity_display
-
 from ideakiller.analyzer import LENS_NAMES
+from ideakiller.cli import _severity_display, main
 
 
 def _make_all_results():
@@ -33,7 +32,7 @@ def _patch_analysis(lens_results=None):
         def __enter__(self):
             self.p1 = patch("ideakiller.cli.LLMClient")
             self.p2 = patch("ideakiller.cli.IdeaAnalyzer")
-            mock_llm_cls = self.p1.__enter__()
+            self.p1.__enter__()
             mock_analyzer_cls = self.p2.__enter__()
             mock_instance = AsyncMock()
             mock_instance.analyze_all.return_value = results
@@ -89,8 +88,7 @@ class TestCLIAnalyze:
 
     def test_analysis_error(self):
         runner = CliRunner()
-        with patch("ideakiller.cli.LLMClient"), \
-             patch("ideakiller.cli.IdeaAnalyzer") as mock_cls:
+        with patch("ideakiller.cli.LLMClient"), patch("ideakiller.cli.IdeaAnalyzer") as mock_cls:
             mock_instance = AsyncMock()
             mock_instance.analyze_all.side_effect = RuntimeError("LLM unavailable")
             mock_cls.return_value = mock_instance

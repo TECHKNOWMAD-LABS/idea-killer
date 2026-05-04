@@ -16,14 +16,12 @@ Usage:
 
 from __future__ import annotations
 
-import asyncio
 import json
 import sys
 
 # When running outside the package, ensure src is on path
 sys.path.insert(0, "src")
 
-from ideakiller.analyzer import IdeaAnalyzer, LENS_NAMES, _validate_lens_result
 from ideakiller.scorer import IdeaScorer
 
 
@@ -101,13 +99,18 @@ def demo_with_mock_data() -> None:
         name = result["lens_name"].replace("_", " ").upper()
         print(f"  {name}: severity {result['severity']}/10 — {result['finding']}")
 
-    print(f"\nJSON output:")
-    print(json.dumps({
-        "idea": idea,
-        "survival_score": score,
-        "verdict": verdict,
-        "lenses": mock_results,
-    }, indent=2))
+    print("\nJSON output:")
+    print(
+        json.dumps(
+            {
+                "idea": idea,
+                "survival_score": score,
+                "verdict": verdict,
+                "lenses": mock_results,
+            },
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

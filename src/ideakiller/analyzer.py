@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import json
 import os
 import re
-from functools import lru_cache
 from typing import Any
 
 from .llm import LLMClient
@@ -110,9 +108,7 @@ def _validate_lens_result(data: dict[str, Any], expected_lens: str) -> dict[str,
         "severity": max(1, min(10, int(data.get("severity", 5)))),
         "finding": str(data.get("finding", "No finding provided.")),
         "evidence": str(data.get("evidence", "No evidence provided.")),
-        "survival_probability": float(
-            max(0.0, min(1.0, data.get("survival_probability", 0.5)))
-        ),
+        "survival_probability": float(max(0.0, min(1.0, data.get("survival_probability", 0.5)))),
     }
     result["lens_name"] = expected_lens  # always canonical
     return result
@@ -123,9 +119,7 @@ def _sanitize_input(text: str, max_length: int = 5000) -> str:
     if not isinstance(text, str):
         raise TypeError(f"Expected str, got {type(text).__name__}")
     # Strip control characters except newlines and tabs
-    cleaned = "".join(
-        c for c in text if c in ("\n", "\t") or (ord(c) >= 32 and ord(c) != 127)
-    )
+    cleaned = "".join(c for c in text if c in ("\n", "\t") or (ord(c) >= 32 and ord(c) != 127))
     return cleaned.strip()[:max_length]
 
 
@@ -135,9 +129,7 @@ class IdeaAnalyzer:
     def __init__(self, llm: LLMClient) -> None:
         self.llm = llm
 
-    async def _analyze_lens(
-        self, lens_name: str, idea: str, context: str = ""
-    ) -> dict[str, Any]:
+    async def _analyze_lens(self, lens_name: str, idea: str, context: str = "") -> dict[str, Any]:
         idea = _sanitize_input(idea, max_length=2000)
         context = _sanitize_input(context, max_length=1000) if context else ""
         if not idea:
@@ -187,9 +179,7 @@ class IdeaAnalyzer:
         """Assess technical feasibility and engineering risk."""
         return await self._analyze_lens("technology", idea, context)
 
-    async def analyze_customer_acquisition(
-        self, idea: str, context: str = ""
-    ) -> dict[str, Any]:
+    async def analyze_customer_acquisition(self, idea: str, context: str = "") -> dict[str, Any]:
         """Analyze go-to-market viability and customer acquisition channels."""
         return await self._analyze_lens("customer_acquisition", idea, context)
 

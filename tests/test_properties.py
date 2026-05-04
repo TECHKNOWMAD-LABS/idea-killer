@@ -3,19 +3,17 @@
 from __future__ import annotations
 
 import json
-import math
 
-from hypothesis import given, settings, assume
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from ideakiller.analyzer import (
+    LENS_NAMES,
     _extract_json,
     _sanitize_input,
     _validate_lens_result,
-    LENS_NAMES,
 )
-from ideakiller.scorer import IdeaScorer, WEIGHTS
-
+from ideakiller.scorer import WEIGHTS, IdeaScorer
 
 # --- Strategies ---
 
@@ -23,26 +21,31 @@ valid_probability = st.floats(min_value=0.0, max_value=1.0, allow_nan=False)
 valid_severity = st.integers(min_value=1, max_value=10)
 lens_name = st.sampled_from(LENS_NAMES)
 
-lens_result = st.fixed_dictionaries({
-    "lens_name": lens_name,
-    "severity": valid_severity,
-    "finding": st.text(min_size=1, max_size=200),
-    "evidence": st.text(min_size=1, max_size=200),
-    "survival_probability": valid_probability,
-})
+lens_result = st.fixed_dictionaries(
+    {
+        "lens_name": lens_name,
+        "severity": valid_severity,
+        "finding": st.text(min_size=1, max_size=200),
+        "evidence": st.text(min_size=1, max_size=200),
+        "survival_probability": valid_probability,
+    }
+)
+
 
 @st.composite
 def full_results_strategy(draw):
     """Generate a list of 7 lens results, one per lens."""
     results = []
     for name in LENS_NAMES:
-        results.append({
-            "lens_name": name,
-            "severity": draw(valid_severity),
-            "finding": draw(st.text(min_size=1, max_size=200)),
-            "evidence": draw(st.text(min_size=1, max_size=200)),
-            "survival_probability": draw(valid_probability),
-        })
+        results.append(
+            {
+                "lens_name": name,
+                "severity": draw(valid_severity),
+                "finding": draw(st.text(min_size=1, max_size=200)),
+                "evidence": draw(st.text(min_size=1, max_size=200)),
+                "survival_probability": draw(valid_probability),
+            }
+        )
     return results
 
 
@@ -50,6 +53,7 @@ full_results = full_results_strategy()
 
 
 # --- Scorer Properties ---
+
 
 class TestScorerProperties:
     @given(prob=valid_probability)
@@ -84,8 +88,13 @@ class TestScorerProperties:
 
         def make_results(p):
             return [
-                {"lens_name": n, "severity": 5, "finding": "f",
-                 "evidence": "e", "survival_probability": p}
+                {
+                    "lens_name": n,
+                    "severity": 5,
+                    "finding": "f",
+                    "evidence": "e",
+                    "survival_probability": p,
+                }
                 for n in WEIGHTS
             ]
 
@@ -103,6 +112,7 @@ class TestScorerProperties:
 
 
 # --- Validate Lens Result Properties ---
+
 
 class TestValidateLensResultProperties:
     @given(
@@ -129,6 +139,7 @@ class TestValidateLensResultProperties:
 
 
 # --- JSON Extraction Properties ---
+
 
 class TestExtractJsonProperties:
     @given(
@@ -162,6 +173,7 @@ class TestExtractJsonProperties:
 
 
 # --- Input Sanitization Properties ---
+
 
 class TestSanitizeInputProperties:
     @given(text=st.text(max_size=500))
